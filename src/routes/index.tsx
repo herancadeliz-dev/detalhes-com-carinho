@@ -10,7 +10,6 @@ import torinoImg from "@/assets/torino.jpg";
 import viverdeImg from "@/assets/viverde.jpg";
 import ventoImg from "@/assets/vento-serrano.jpg";
 import { VENIZE, downloadVCard, maskPhone, whatsappUrl, onlyDigits, type Broker } from "@/lib/card-utils";
-import { sendLead } from "@/lib/lead.functions";
 
 type Search = { nome?: string | undefined; creci?: string | undefined; tel?: string | undefined; email?: string | undefined; foto?: string | undefined };
 
@@ -149,7 +148,21 @@ function EbookSection({ broker }: { broker: Broker }) {
     if (onlyDigits(tel).length < 10) { toast.error("Informe um WhatsApp válido."); return; }
     setState("sending");
     try {
-      await sendLead({ data: { nome, telefone: tel, corretor: broker.id, corretorNome: broker.nome } });
+      const nomeFormatado = nome.trim().replace(/\s+/g, " ");
+      const telefoneSoNumeros = onlyDigits(tel);
+      const corretorNome = broker.nome;
+      const res = await fetch(VENIZE.leadEndpoint, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          nome: nomeFormatado,
+          telefone: telefoneSoNumeros,
+          origem: "site",
+          mensagem: `Download do E-book via Cartão NFC — Corretor: ${corretorNome}`,
+        }),
+      });
+      const json = (await res.json().catch(() => null)) as { ok?: boolean } | null;
+      if (res.status !== 200 || json?.ok !== true) throw new Error("lead rejected");
       setState("done");
     } catch {
       setState("idle");
