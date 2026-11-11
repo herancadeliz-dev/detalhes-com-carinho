@@ -17,9 +17,12 @@ export const sendLead = createServerFn({ method: "POST" })
     };
   })
   .handler(async ({ data }) => {
+    const token = process.env.VENIZE_LEAD_TOKEN;
+    const headers: Record<string, string> = { "Content-Type": "application/json" };
+    if (token) headers.Authorization = `Bearer ${token}`;
     const res = await fetch(VENIZE.leadEndpoint, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers,
       body: JSON.stringify({
         nome: data.nome,
         telefone: data.telefone,
