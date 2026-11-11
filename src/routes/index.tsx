@@ -12,12 +12,12 @@ import ventoImg from "@/assets/vento-serrano.jpg";
 import { VENIZE, downloadVCard, maskPhone, whatsappUrl, onlyDigits, type Broker } from "@/lib/card-utils";
 import { sendLead } from "@/lib/lead.functions";
 
-type Search = { nome?: string; creci?: string; tel?: string; email?: string; foto?: string };
+type Search = { nome?: string | undefined; creci?: string | undefined; tel?: string | undefined; email?: string | undefined; foto?: string | undefined };
 
 export const Route = createFileRoute("/")({
   validateSearch: (s: Record<string, unknown>): Search => {
     const str = (v: unknown) => (typeof v === "string" || typeof v === "number" ? String(v) : undefined);
-    return { nome: str(s.nome), creci: str(s.creci), tel: str(s.tel), email: str(s.email), foto: str(s.foto) };
+    return { nome: str(s["nome"]), creci: str(s["creci"]), tel: str(s["tel"]), email: str(s["email"]), foto: str(s["foto"]) };
   },
   head: () => ({
     meta: [
@@ -145,8 +145,8 @@ function EbookSection({ broker }: { broker: Broker }) {
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (nome.trim().split(/\s+/).length < 2) return toast.error("Informe seu nome completo.");
-    if (onlyDigits(tel).length < 10) return toast.error("Informe um WhatsApp válido.");
+    if (nome.trim().split(/\s+/).length < 2) { toast.error("Informe seu nome completo."); return; }
+    if (onlyDigits(tel).length < 10) { toast.error("Informe um WhatsApp válido."); return; }
     setState("sending");
     try {
       await sendLead({ data: { nome, telefone: tel, corretor: broker.id, corretorNome: broker.nome } });
@@ -229,7 +229,7 @@ function Showcase({ broker }: { broker: Broker }) {
               <p className="mt-1 text-sm text-muted-foreground">{e.desc}</p>
               <div className="mt-3 flex flex-wrap gap-1.5">
                 {e.chips.map((c, i) => {
-                  const Icon = [BedDouble, Bath, Building2][i];
+                  const Icon = [BedDouble, Bath, Building2][i] ?? Building2;
                   return (
                     <span key={c} className="flex items-center gap-1 rounded-full border border-border px-2.5 py-1 text-[11px] text-accent-foreground">
                       <Icon className="h-3 w-3 text-primary" />{c}
