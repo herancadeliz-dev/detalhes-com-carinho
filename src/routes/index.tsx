@@ -1,23 +1,27 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { queryOptions, useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
   BadgeCheck, Phone, Instagram, MapPin, UserPlus, MessageCircle, Download,
-  Lock, ShieldCheck, Sparkles, Loader2, CheckCircle2, BedDouble, Bath, Building2,
+  Lock, ShieldCheck, QrCode, X, Sparkles, Loader2, CheckCircle2, BedDouble, Bath, Building2,
 } from "lucide-react";
 import corretorImg from "@/assets/corretor.jpg";
 import torinoImg from "@/assets/torino.jpg";
 import viverdeImg from "@/assets/viverde.jpg";
 import ventoImg from "@/assets/vento-serrano.jpg";
-import { VENIZE, downloadVCard, maskPhone, whatsappUrl, onlyDigits, type Broker } from "@/lib/card-utils";
+import { getBrokerBySlug } from "@/lib/brokers.functions";
+import { VENIZE, saveContact, vCardText, maskPhone, whatsappUrl, onlyDigits, type Broker } from "@/lib/card-utils";
 
-type Search = { nome?: string | undefined; creci?: string | undefined; tel?: string | undefined; email?: string | undefined; foto?: string | undefined };
+type Search = { id?: string | undefined; nome?: string | undefined; creci?: string | undefined; tel?: string | undefined; email?: string | undefined; foto?: string | undefined };
 
 export const Route = createFileRoute("/")({
   validateSearch: (s: Record<string, unknown>): Search => {
     const str = (v: unknown) => (typeof v === "string" || typeof v === "number" ? String(v) : undefined);
-    return { nome: str(s["nome"]), creci: str(s["creci"]), tel: str(s["tel"]), email: str(s["email"]), foto: str(s["foto"]) };
+    return { id: str(s["id"]), nome: str(s["nome"]), creci: str(s["creci"]), tel: str(s["tel"]), email: str(s["email"]), foto: str(s["foto"]) };
   },
+  loaderDeps: ({ search }) => ({ id: search.id }),
+  loader: ({ context, deps }) => (deps.id ? context.queryClient.ensureQueryData(brokerQuery(deps.id)) : null),
   head: () => ({
     meta: [
       { title: "Cartão Digital · Venize Imóveis Alto Padrão" },
@@ -31,6 +35,9 @@ export const Route = createFileRoute("/")({
   component: CardPage,
 });
 
+const brokerQuery = (slug: string) =>
+  queryOptions({ queryKey: ["broker", slug], queryFn: () => getBrokerBySlug({ data: { slug } }), staleTime: 60_000 });
+
 const EMPREENDIMENTOS = [
   { nome: "Residencial Torino", tag: "Lançamento", desc: "Alto padrão em localização nobre.", img: torinoImg, chips: ["3 e 4 Quartos", "Suítes", "Rooftop"] },
   { nome: "Residencial Viverde", tag: "Lazer completo", desc: "Conforto, lazer de clube e sofisticação.", img: viverdeImg, chips: ["2 e 3 Quartos", "Suítes", "Piscina"] },
@@ -39,14 +46,15 @@ const EMPREENDIMENTOS = [
 
 function CardPage() {
   const s = Route.useSearch();
+  const { data: db } = useQuery({ ...brokerQuery(s.id ?? ""), enabled: !!s.id });
   const broker: Broker = {
-    nome: s.nome?.trim() || "Luciano Venize",
-    creci: s.creci?.trim() || "12345-DF",
-    tel: onlyDigits(s.tel ?? "") || "61999999999",
-    email: s.email?.trim() || "contato@venizeimoveis.com.br",
-    id: s.creci?.trim() || "demo",
+    nome: db?.nome || s.nome?.trim() || "Luciano Venize",
+    creci: db?.creci || s.creci?.trim() || "12345-DF",
+    tel: onlyDigits(db?.tel || s.tel || "") || "61999999999",
+    email: db?.email || s.email?.trim() || "contato@venizeimoveis.com.br",
+    id: db?.slug || s.id || s.creci?.trim() || "demo",
   };
-  const photo = s.foto || corretorImg;
+  const photo = db?.foto_url || s.foto || corretorImg;
   const telFmt = maskPhone(broker.tel);
   const waMsg = "Olá, peguei seu cartão de visita da Venize e gostaria de conhecer as oportunidades de imóveis.";
 
@@ -84,11 +92,12 @@ function Profile({ broker, photo }: { broker: Broker; photo: string }) {
 
 function Actions({ broker, photo, telFmt, waMsg }: { broker: Broker; photo: string; telFmt: string; waMsg: string }) {
   const [saving, setSaving] = useState(false);
+  const [qr, setQr] = useState(false);
   const save = async () => {
     setSaving(true);
-    await downloadVCard(broker, photo);
+    const how = await saveContact(broker, photo);
     setSaving(false);
-    toast.success("Contato pronto", { description: "Abra o arquivo para salvar na sua agenda." });
+    if (how === "downloaded") toast.success("Contato pronto", { description: "Toque em \"Adicionar contato\" para salvar na agenda." });
   };
   const secondary = [
     { icon: Phone, label: "Ligar", href: `tel:+55${broker.tel}` },
@@ -105,16 +114,40 @@ function Actions({ broker, photo, telFmt, waMsg }: { broker: Broker; photo: stri
         className="press bg-gold shadow-gold flex h-14 w-full items-center justify-center gap-2.5 rounded-2xl font-semibold text-primary-foreground">
         {saving ? <Loader2 className="h-5 w-5 animate-spin" /> : <UserPlus className="h-5 w-5" />} Salvar na Agenda
       </button>
-      <div className="grid grid-cols-3 gap-3 pt-1">
+      <div className="grid grid-cols-4 gap-2.5 pt-1">
         {secondary.map(({ icon: Icon, label, href }) => (
           <a key={label} href={href} target={href.startsWith("http") ? "_blank" : undefined} rel="noreferrer"
             className="press glass flex flex-col items-center gap-1.5 rounded-2xl py-4 text-xs text-muted-foreground hover:text-foreground">
             <Icon className="h-5 w-5 text-primary" />{label}
           </a>
         ))}
+        <button type="button" onClick={() => setQr(true)}
+          className="press glass flex flex-col items-center gap-1.5 rounded-2xl py-4 text-xs text-muted-foreground hover:text-foreground">
+          <QrCode className="h-5 w-5 text-primary" />QR Code
+        </button>
       </div>
+      {qr && <ContactQr broker={broker} onClose={() => setQr(false)} />}
       <p className="pt-1 text-center text-xs text-muted-foreground">{telFmt} · {broker.email}</p>
     </section>
+  );
+}
+
+function ContactQr({ broker, onClose }: { broker: Broker; onClose: () => void }) {
+  const [src, setSrc] = useState("");
+  useEffect(() => {
+    import("qrcode").then((Q) => Q.toDataURL(vCardText(broker), { margin: 1, width: 560, errorCorrectionLevel: "M" })).then(setSrc);
+  }, [broker]);
+  return (
+    <div className="fixed inset-0 z-50 grid place-items-center bg-background/85 p-6 backdrop-blur-sm" onClick={onClose}>
+      <div className="glass rise w-full max-w-xs rounded-3xl p-6 text-center" onClick={(e) => e.stopPropagation()}>
+        <button onClick={onClose} aria-label="Fechar" className="ml-auto block"><X className="h-5 w-5 text-muted-foreground" /></button>
+        <p className="font-display text-2xl">{broker.nome}</p>
+        <p className="mt-1 text-xs text-muted-foreground">Aponte a câmera do celular e toque em "Adicionar aos contatos". Nada é baixado.</p>
+        <div className="mx-auto mt-5 aspect-square w-full rounded-2xl bg-foreground p-3">
+          {src ? <img src={src} alt={`QR Code do contato de ${broker.nome}`} className="h-full w-full" /> : <Loader2 className="m-auto mt-[40%] h-6 w-6 animate-spin text-background" />}
+        </div>
+      </div>
+    </div>
   );
 }
 
