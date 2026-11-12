@@ -174,7 +174,7 @@ function BrokerForm({ initial, onClose, onSaved }: { initial: typeof empty; onCl
           </label>
         </div>
         <In label="Nome completo" value={f.nome} required onChange={(v) => { set("nome", v); if (!slugTouched) set("slug", slugify(v.split(" ")[0] ?? "")); }} />
-        <In label="ID do cartão (vai no link)" value={f.slug} required onChange={(v) => { setSlugTouched(true); set("slug", slugify(v)); }} hint={f.slug ? cardLink(slugify(f.slug)) : "ex.: marcus"} />
+        <In label="ID do cartão (vai no link)" value={f.slug} required onChange={(v) => { setSlugTouched(true); set("slug", slugify(v, true)); }} hint={f.slug ? cardLink(slugify(f.slug)) : "ex.: marcus"} />
         <In label="CRECI" value={f.creci} onChange={(v) => set("creci", v)} />
         <In label="WhatsApp" value={f.tel} required inputMode="tel" onChange={(v) => set("tel", maskPhone(v))} />
         <In label="E-mail" value={f.email} type="email" onChange={(v) => set("email", v)} />

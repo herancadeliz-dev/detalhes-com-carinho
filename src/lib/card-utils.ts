@@ -39,7 +39,7 @@ async function toBase64(url: string) {
   }
 }
 
-export async function downloadVCard(b: Broker, photoUrl: string) {
+export async function buildVCard(b: Broker, photoUrl: string) {
   const photo = await toBase64(photoUrl);
   const [first, ...rest] = b.nome.split(" ");
   const lines = [
@@ -55,10 +55,40 @@ export async function downloadVCard(b: Broker, photoUrl: string) {
     photo ? `PHOTO;ENCODING=b;TYPE=JPEG:${photo}` : "",
     "END:VCARD",
   ].filter(Boolean);
-  const blob = new Blob([lines.join("\r\n")], { type: "text/vcard;charset=utf-8" });
+  return lines.join("\r\n");
+}
+
+/** Plain-text vCard (no photo) small enough for a QR code. */
+export function vCardText(b: Broker) {
+  const [first, ...rest] = b.nome.split(" ");
+  return [
+    "BEGIN:VCARD", "VERSION:3.0", `N:${rest.join(" ")};${first};;;`, `FN:${b.nome}`, "ORG:Venize Imóveis",
+    `TEL;TYPE=CELL:+${intlPhone(b.tel)}`, `EMAIL:${b.email}`, `URL:${VENIZE.site}`, "END:VCARD",
+  ].join("\n");
+}
+
+/**
+ * Opens the phone's own "add contact" sheet when possible (share sheet on iOS/Android),
+ * falling back to a regular file download. Returns how it was delivered.
+ */
+export async function saveContact(b: Broker, photoUrl: string): Promise<"shared" | "downloaded" | "cancelled"> {
+  const vcf = await buildVCard(b, photoUrl);
+  const name = `${b.nome.replace(/\s+/g, "_")}_Venize.vcf`;
+  const file = new File([vcf], name, { type: "text/vcard" });
+  const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
+  if (!isIOS && navigator.canShare?.({ files: [file] })) {
+    try {
+      await navigator.share({ files: [file], title: b.nome });
+      return "shared";
+    } catch (e) {
+      if (e instanceof DOMException && e.name === "AbortError") return "cancelled";
+    }
+  }
+  const blob = new Blob([vcf], { type: "text/vcard;charset=utf-8" });
   const a = document.createElement("a");
   a.href = URL.createObjectURL(blob);
-  a.download = `${b.nome.replace(/\s+/g, "_")}_Venize.vcf`;
+  a.download = name;
   a.click();
   setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+  return "downloaded";
 }
