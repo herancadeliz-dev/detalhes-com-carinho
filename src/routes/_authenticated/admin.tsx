@@ -63,7 +63,7 @@ function AdminPage() {
   const remove = async (b: BrokerRow) => {
     if (!confirm(`Excluir ${b.nome}? O cartão dele vai parar de mostrar seus dados.`)) return;
     const { error } = await supabase.from("brokers").delete().eq("id", b.id);
-    if (error) return toast.error("Não foi possível excluir");
+    if (error) { toast.error("Não foi possível excluir"); return; }
     toast.success("Corretor excluído");
     qc.invalidateQueries({ queryKey: ["brokers"] });
   };
@@ -149,12 +149,12 @@ function BrokerForm({ initial, onClose, onSaved }: { initial: typeof empty; onCl
   const save = async (e: React.FormEvent) => {
     e.preventDefault();
     const slug = slugify(f.slug);
-    if (!slug) return toast.error("Informe o ID do cartão");
+    if (!slug) { toast.error("Informe o ID do cartão"); return; }
     setBusy(true);
     const row = { slug, nome: f.nome.trim(), creci: f.creci.trim(), tel: onlyDigits(f.tel), email: f.email.trim(), foto_url: f.foto_url || null, ativo: f.ativo };
     const { error } = f.id ? await supabase.from("brokers").update(row).eq("id", f.id) : await supabase.from("brokers").insert(row);
     setBusy(false);
-    if (error) return toast.error(error.code === "23505" ? "Esse ID já está em uso por outro corretor" : "Não foi possível salvar");
+    if (error) { toast.error(error.code === "23505" ? "Esse ID já está em uso por outro corretor" : "Não foi possível salvar"); return; }
     toast.success("Corretor salvo");
     onSaved();
   };
