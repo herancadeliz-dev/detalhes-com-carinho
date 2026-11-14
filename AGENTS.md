@@ -28,3 +28,8 @@ use the editor.
   own key and store it in Secrets.
 - **Secrets.** Lovable manages them. Do not put secret values in the repo.
 <!-- LOVABLE:END -->
+
+## Project rules
+- Broker cards are one shared page (`/`) resolved by `?id=<slug>` from the `brokers` table; NFC tags store only that link so broker data can change without rewriting tags.
+- Broker photos live in a private storage bucket and are stored as long-lived signed URLs, because the workspace blocks public buckets.
+- The first account created becomes admin (trigger); admin rights are checked via `has_role`, never client state.
