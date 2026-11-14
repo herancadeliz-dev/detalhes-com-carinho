@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { queryOptions, useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
@@ -137,7 +138,7 @@ function ContactQr({ broker, onClose }: { broker: Broker; onClose: () => void })
   useEffect(() => {
     import("qrcode").then((Q) => Q.toDataURL(vCardText(broker), { margin: 1, width: 560, errorCorrectionLevel: "M" })).then(setSrc);
   }, [broker]);
-  return (
+  return createPortal(
     <div className="fixed inset-0 z-50 grid place-items-center bg-background/85 p-6 backdrop-blur-sm" onClick={onClose}>
       <div className="glass rise w-full max-w-xs rounded-3xl p-6 text-center" onClick={(e) => e.stopPropagation()}>
         <button onClick={onClose} aria-label="Fechar" className="ml-auto block"><X className="h-5 w-5 text-muted-foreground" /></button>
@@ -147,7 +148,8 @@ function ContactQr({ broker, onClose }: { broker: Broker; onClose: () => void })
           {src ? <img src={src} alt={`QR Code do contato de ${broker.nome}`} className="h-full w-full" /> : <Loader2 className="m-auto mt-[40%] h-6 w-6 animate-spin text-background" />}
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }
 
