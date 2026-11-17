@@ -33,3 +33,4 @@ use the editor.
 - Broker cards are one shared page (`/`) resolved by `?id=<slug>` from the `brokers` table; NFC tags store only that link so broker data can change without rewriting tags.
 - Broker photos live in a private storage bucket and are stored as long-lived signed URLs, because the workspace blocks public buckets.
 - The first account created becomes admin (trigger); admin rights are checked via `has_role`, never client state.
+- The e-book is a static PDF in `public/ebook/` built by `scripts/build_ebook.py` (images fetched to /tmp/eb/img from the Venize and Unik sites); the app only stamps the broker on the last page with pdf-lib, so content edits happen in the script, not in app code.

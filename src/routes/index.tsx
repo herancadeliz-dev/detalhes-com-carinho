@@ -40,9 +40,9 @@ const brokerQuery = (slug: string) =>
   queryOptions({ queryKey: ["broker", slug], queryFn: () => getBrokerBySlug({ data: { slug } }), staleTime: 60_000 });
 
 const EMPREENDIMENTOS = [
-  { nome: "Residencial Torino", tag: "Lançamento", desc: "Alto padrão em localização nobre.", img: torinoImg, chips: ["3 e 4 Quartos", "Suítes", "Rooftop"] },
-  { nome: "Residencial Viverde", tag: "Lazer completo", desc: "Conforto, lazer de clube e sofisticação.", img: viverdeImg, chips: ["2 e 3 Quartos", "Suítes", "Piscina"] },
-  { nome: "Residencial Vento Serrano", tag: "Pronto para morar", desc: "Acabamentos nobres e vista para a serra.", img: ventoImg, chips: ["3 Quartos", "2 Suítes", "Pronto"] },
+  { nome: "Residencial Vento Serrano", tag: "Pronto para morar", desc: "No ponto mais alto de Sobradinho I, com piscina de borda infinita. A partir de R$ 761 mil.", img: ventoImg, chips: ["2 e 3 Quartos", "1 Suíte", "Até 3 vagas"] },
+  { nome: "Residencial Torino", tag: "Em construção", desc: "44,06 m² com varanda e até R$ 45 mil em benefícios CODHAB. A partir de R$ 320 mil.", img: torinoImg, chips: ["2 Quartos", "1 Banheiro", "4 Elevadores"] },
+  { nome: "Residencial Viverde", tag: "Breve lançamento", desc: "Sobradinho II, com varanda e lazer completo. Entrega prevista para 2029.", img: viverdeImg, chips: ["1 a 3 Quartos", "Varanda", "Lazer completo"] },
 ];
 
 function CardPage() {
@@ -220,7 +220,7 @@ function EbookSection({ broker }: { broker: Broker }) {
         Guia de Lançamentos <span className="text-gold">& Oportunidades</span>
       </h2>
       <p className="mt-3 text-center text-sm leading-relaxed text-muted-foreground">
-        Receba agora a seleção restrita dos melhores empreendimentos da região (Residencial Torino, Viverde e Vento Serrano), incluindo plantas, faixas de preço e condições exclusivas de lançamento.
+        Receba o guia com os empreendimentos Unik em Sobradinho (Vento Serrano, Torino e o lançamento Viverde): fotos, plantas, valores de referência e como usar FGTS e subsídios.
       </p>
 
       {state === "done" ? (
