@@ -7,6 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { maskPhone, onlyDigits } from "@/lib/card-utils";
 import { slugify } from "@/lib/slug";
 import type { Tables } from "@/integrations/supabase/types";
+import { AccountManager } from "@/components/account-manager";
 
 type BrokerRow = Tables<"brokers">;
 
@@ -78,7 +79,7 @@ function AdminPage() {
     return (
       <Center>
         <p className="font-display text-2xl">Acesso restrito</p>
-        <p className="mt-2 text-sm text-muted-foreground">A conta {roleQ.data?.email} não tem permissão de administradora.</p>
+        <p className="mt-2 text-sm text-muted-foreground">Sua conta não tem permissão de administradora.</p>
         <button onClick={signOut} className="mt-5 text-sm text-primary">Sair</button>
       </Center>
     );
@@ -118,6 +119,7 @@ function AdminPage() {
         {listQ.data?.length === 0 && <li className="text-center text-sm text-muted-foreground">Nenhum corretor ainda.</li>}
       </ul>
 
+      <AccountManager />
       {editing && <BrokerForm initial={editing} onClose={() => setEditing(null)} onSaved={() => { setEditing(null); qc.invalidateQueries({ queryKey: ["brokers"] }); }} />}
     </main>
   );

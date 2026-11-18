@@ -32,5 +32,7 @@ use the editor.
 ## Project rules
 - Broker cards are one shared page (`/`) resolved by `?id=<slug>` from the `brokers` table; NFC tags store only that link so broker data can change without rewriting tags.
 - Broker photos live in a private storage bucket and are stored as long-lived signed URLs, because the workspace blocks public buckets.
-- The first account created becomes admin (trigger); admin rights are checked via `has_role`, never client state.
+- Accounts are created only by administrators; verify `has_role` through the authenticated client before privileged account operations, preventing public signup and privilege escalation.
+- Username authentication derives an internal non-deliverable email; private profiles store normalized unique usernames separately from public broker contact data, preventing credential disclosure.
+- Administrators cannot change their own role, ensuring another active administrator remains when removing a colleague's permissions.
 - The e-book is a static PDF in `public/ebook/` built by `scripts/build_ebook.py` (images fetched to /tmp/eb/img from the Venize and Unik sites); the app only stamps the broker on the last page with pdf-lib, so content edits happen in the script, not in app code.

@@ -15,7 +15,7 @@ export const listAccounts = createServerFn({ method: "POST" })
     if (userError || roleError) throw new Error("Não foi possível carregar os usuários.");
     return users.users.map((user) => ({
       id: user.id,
-      username: String(user.user_metadata?.username ?? "Conta sem nome de usuário"),
+      username: user.id === context.userId ? "Sua conta" : String(user.user_metadata?.["username"] ?? "Conta sem nome de usuário"),
       admin: roles?.some((role) => role.user_id === user.id && role.role === "admin") ?? false,
       self: user.id === context.userId,
     }));
