@@ -8,6 +8,20 @@
       "when": 1794511545410,
       "tag": "0000_brokers_and_roles",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1795045265271,
+      "tag": "0001_admin_managed_accounts",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1795045289666,
+      "tag": "0002_private_account_profiles",
+      "breakpoints": true
     }
   ]
 }
